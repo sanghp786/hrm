@@ -25,6 +25,8 @@ export const HRM_ROUTES = {
   MOCK: '/client/mock',
   /** Connect page for device pairing */
   CONNECT: '/client/connect',
+  /** Experimental analytics page */
+  EXPERIMENTAL: '/client/experimental',
   /** Debug page for Spotify */
   DEBUG_SPOTIFY: '/debug/spotify',
 } as const
@@ -128,6 +130,7 @@ export async function setupVisualRegressionTest(browser: Browser): Promise<{
   dashboardPage: Page
   controlPage: Page
   mockPage: Page
+  experimentalPage: Page
 }> {
   // Create a new isolated browser context for the test suite
   const context = await browser.newContext({
@@ -138,7 +141,8 @@ export async function setupVisualRegressionTest(browser: Browser): Promise<{
   await mockGoogleDocIframe(context)
 
   // Create all pages in parallel for efficiency
-  const [dashboardPage, controlPage, mockPage] = await Promise.all([
+  const [dashboardPage, controlPage, mockPage, experimentalPage] = await Promise.all([
+    context.newPage(),
     context.newPage(),
     context.newPage(),
     context.newPage(),
@@ -150,6 +154,7 @@ export async function setupVisualRegressionTest(browser: Browser): Promise<{
     dashboardPage.goto(`${baseUrl}${HRM_ROUTES.DASHBOARD}`),
     controlPage.goto(`${baseUrl}${HRM_ROUTES.CONTROL}`),
     mockPage.goto(`${baseUrl}${HRM_ROUTES.MOCK}`),
+    experimentalPage.goto(`${baseUrl}/client/experimental`),
   ])
 
   // Wait for all pages to be fully loaded and idle
@@ -157,6 +162,7 @@ export async function setupVisualRegressionTest(browser: Browser): Promise<{
     waitForPageReady(dashboardPage),
     waitForPageReady(controlPage),
     waitForPageReady(mockPage),
+    waitForPageReady(experimentalPage),
   ])
 
   // Ensure all custom fonts are loaded to prevent visual shifts
@@ -164,12 +170,13 @@ export async function setupVisualRegressionTest(browser: Browser): Promise<{
     waitForFontsLoaded(dashboardPage),
     waitForFontsLoaded(controlPage),
     waitForFontsLoaded(mockPage),
+    waitForFontsLoaded(experimentalPage),
   ])
 
   // Stop any running timers to ensure a consistent initial state
   await stopTimer(controlPage, dashboardPage)
 
-  return { context, dashboardPage, controlPage, mockPage }
+  return { context, dashboardPage, controlPage, mockPage, experimentalPage }
 }
 
 /**
